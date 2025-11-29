@@ -2,6 +2,7 @@
 Configuration settings for the RAG chatbot MVP
 """
 
+import os
 from pathlib import Path
 from dataclasses import dataclass
 
@@ -9,8 +10,8 @@ from dataclasses import dataclass
 @dataclass
 class Config:
     # Vector Database
-    QDRANT_HOST: str = "localhost"
-    QDRANT_PORT: int = 6333
+    QDRANT_HOST: str = os.getenv("QDRANT_HOST", "localhost")
+    QDRANT_PORT: int = int(os.getenv("QDRANT_PORT", "6333"))
     COLLECTION_NAME: str = "documents"
 
     # Embeddings
@@ -18,7 +19,7 @@ class Config:
     VECTOR_SIZE: int = 384  # all-MiniLM-L6-v2 vector size
 
     # LLM
-    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     OLLAMA_MODEL: str = "llama3.2"  # Updated to use llama3.2
 
     # Document processing

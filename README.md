@@ -1,17 +1,52 @@
 # document-chatbot-rag
 
-A nerdy chatbot for querying your own documents using open-source models and RAG. The system allows uploading text files, indexing them in a vector database, and querying them using natural language.
+A RAG chatbot for querying your own documents using open-source models. Upload documents, ask questions, get answers based on your content using vector search and local LLMs.
+
+## Quick Start
+
+**Prerequisites:** Docker and Docker Compose only (no Python installation needed)
+
+### Start the System
+```bash
+./start-services.sh
+```
+
+This single command will:
+- Start Qdrant vector database service
+- Start Ollama LLM service
+- Install Python dependencies automatically
+- Download llama3.2 model
+- Launch interactive chatbot
+
+### Stop the System
+```bash
+./stop-services.sh
+```
+
+### Add Your Documents
+Place your text or PDF files in the `data/documents/` folder before starting the system.
+
+### Example Interaction
+```
+You: What is artificial intelligence?
+Bot: Based on the context, Artificial Intelligence (AI) is a broad field 
+     that encompasses machine learning, deep learning, and natural language 
+     processing, aiming to create intelligent systems that can perform 
+     tasks typically requiring human intelligence.
+```
+
+**No local Python/pip installation required** - everything runs in Docker containers.
+
 
 ## How it works
 
-1. The user uploads text documents.
-2. The documents are chunked, embedded, and stored in a local vector database.
-3. When the user asks a question:
-    - The question is embedded
-    - Relevant chunks are retrieved from the vector store
-    - The selected context is passed to the model
-
-4. The model generates the final answer based on the retrieved content.
+1. The user uploads a text document -> "Machine learning helps computers learn from data"
+2. This document is preprocessed (chunking) -> `chunks = ["Machine learning helps", "computers learn from data"]`
+3. Chunks are embedded using transformers (SentenceTransformer) resulting in sentence vectors  -> `[[0.1, 0.8, ...], [0.2, 0.7, ...]]`
+4. These vectors are stored in a Vector DB (Qdrant) labeled properly with the text chunk they represent -> `{vector: [0.1, 0.8, ...], text: "Machine learning helps"}`
+5. The user asks something -> `"What is ML?"`
+6. User input is embedded and the vector is stored in the Vector DB
+7. Similarity search is done to get the best result according to a score -> `"Machine learning helps..." (score: 0.85)`
 
 ## Tech stack
 
@@ -24,26 +59,6 @@ A nerdy chatbot for querying your own documents using open-source models and RAG
 | FastAPI                             | Main Framework                      |
 | Docker                   | Run everything on a container |
 
-## Project Structure (MVP)
-
-```
-document-chatbot-rag/
-├── src/
-│   ├── __init__.py
-│   ├── main.py                # Main entry point
-│   ├── config.py              # System configuration
-│   ├── document_processor.py  # Document processing and chunking
-│   ├── embeddings.py          # Embedding generation
-│   ├── vector_store.py        # Qdrant management
-│   ├── retriever.py           # Relevant chunk retrieval
-│   ├── llm_client.py          # Ollama client
-│   └── chatbot.py             # Complete RAG pipeline
-├── data/
-│   └── documents/             # Documents
-├── requirements.txt
-├── docker-compose.yml         
-└── README.md
-```
 
 ## MVP Flow
 

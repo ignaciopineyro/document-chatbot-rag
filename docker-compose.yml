@@ -10,3 +10,66 @@ services:
     environment:
       - QDRANT__SERVICE__HTTP_PORT=6333
     restart: unless-stopped
+    networks:
+      - rag-network
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    restart: unless-stopped
+    networks:
+      - rag-network
+
+  rag-app:
+    image: python:3.11-slim
+    depends_on:
+      - qdrant
+      - ollama
+    volumes:
+      - .:/app
+      - ./data:/app/data
+    working_dir: /app
+    environment:
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - OLLAMA_BASE_URL=http://ollama:11434
+    networks:
+      - rag-network
+    stdin_open: true
+    tty: true
+    command: >
+      bash -c "
+        echo 'Installing system dependencies...' &&
+        apt-get update && apt-get install -y curl &&
+        echo 'Installing Python dependencies...' &&
+        pip install --no-cache-dir -r requirements.txt &&
+        echo 'Waiting for services to be ready...' &&
+        sleep 30 &&
+        echo 'Downloading Ollama model (this may take a few minutes)...' &&
+        until curl -s http://ollama:11434/api/tags > /dev/null 2>&1; do
+          echo 'Waiting for Ollama to be ready...'
+          sleep 5
+        done &&
+        curl -X POST http://ollama:11434/api/pull -d '{\"name\":\"llama3.2\"}' -H 'Content-Type: application/json' &&
+        echo 'Model downloaded successfully!' &&
+        echo '' &&
+        echo '==================================' &&
+        echo 'RAG Chatbot is ready!' &&
+        echo 'You can now ask questions about your documents.' &&
+        echo 'To upload documents, place them in the data/documents/ folder.' &&
+        echo '==================================' &&
+        echo '' &&
+        python chatbot.py
+      "
+
+networks:
+  rag-network:
+    driver: bridge
+
+volumes:
+  ollama_data:

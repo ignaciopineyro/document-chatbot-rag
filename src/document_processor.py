@@ -23,7 +23,7 @@ class DocumentProcessor:
                 pdf_reader = PyPDF2.PdfReader(file)
                 for page_num, page in enumerate(pdf_reader.pages):
                     page_text = page.extract_text()
-                    if page_text.strip():  # Only add non-empty pages
+                    if page_text.strip():
                         text += f"\n--- Page {page_num + 1} ---\n"
                         text += page_text + "\n"
         except Exception as e:
